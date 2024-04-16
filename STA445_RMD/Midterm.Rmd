@@ -1,0 +1,104 @@
+---
+author: "Mason Gyllenberg-Nabbefeld"
+date: "`r format(Sys.time(),  '%B %d, %Y')`"
+title: "In Class Exam"
+output: pdf_document
+---
+
+# Instructions
+
+* **You may use an 8.5 by 11 handwritten note sheet and the help in R during the exam.**
+
+* **You are allowed to use our textbook.**
+
+* **You may not refer to homework assignments, google, chat gpt or other outside resources.**
+
+* **You may not share this exam with anyone.  Any attempt to do so will lead to an automatic zero in the class.**
+
+* **Change the header information within the RMD to contain your own name. (5 points)**
+
+* **Answer all exercise prompts within the RMD.  All code must be shown**
+
+* **Make sure to show appropriate output.  Think about what I need to see to grade your solution.**
+
+* **Place answers into the blank R chunks given for each required response.**
+
+* **Compile the RMD into a PDF when finished.(5 points)**
+
+* **Ensure all code is visible within the PDF.**
+
+* **Submit the PDF through our bblearn portal.**
+
+
+1.  (10 pts) Look at the exam questions and make sure you have installed the packages you will need (like tidyverse and readxl). Write the library commands you will need for the exam in this R chunk.  Suppress warning messages and start up messages.
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(readxl)
+library(lubridate)
+library(stringr)
+```
+
+2.  (10 pts) Download the file starwars.xlsx to your file system.  Write an R command to create an R data frame (or tibble) called "StarWars"  from that file.  The result should be a data set with 11 columns and  87 rows.  Make sure that missing data is handled properly and that the proper values are loaded as column names.  Use str(StarWars) at the end to show that the data has been loaded properly.  Do not print the dataset.
+```{r}
+StarWars <- read_excel("/Users/mason/Desktop/NAU/24/STA444:5/445/starwars.xlsx",
+                          sheet = 'Data', range = 'A3:K90')
+str(StarWars)
+```
+
+3.  (10 pts) Create a scatterplot of mass (y) vs height(x). Filter the data first so that characters with missing masses or heights are removed.  Include an  appropriate title to the graph and label axes appropriately.
+
+```{r}
+my.starwars <- StarWars %>% drop_na(height, mass)
+ggplot(my.starwars,
+       aes(height, mass))+
+  geom_point(color = "darkgreen")+
+  theme_bw()+
+  labs(title = "Height vs Mass for Star Wars characters")
+```
+4.  (10 pts) Continuing with your dataset with NAs removed, there is one character that is particularly massive and not all that tall, making it hard to see the relationship between height and weight.  Filter that character out and redo the graph.  Show the new graph.
+
+```{r}
+my.starwars.no.jabba <- my.starwars %>% filter(my.starwars$mass < 1000)
+ggplot(my.starwars.no.jabba,
+       aes(height, mass))+
+  geom_point(color = "darkgreen")+
+  theme_bw()+
+  labs(title = "Height vs Mass for Star Wars characters")
+```
+
+5.  (10 pts) Now that Jabba has been removed, you should be able to see an increasing relationship between height and mass.  Fit a linear model to the data (without Jabba) and save the model object as "HtWtModel".  Extract and show the slope and intercept parameters from the model.
+
+```{r}
+HtWtModel <- lm(height~mass, data = my.starwars.no.jabba)
+coefficients(HtWtModel)
+```
+
+6.  (10 pts) Continuing with your dataset with Jabba removed, filter the data again so that characters with missing gender are removed. Then add a column to your StarWars data set that contains the characters height in inches (cm*.393701 = in). 
+
+```{r}
+my.starwars.no.jabba.ht.inches <- my.starwars.no.jabba %>% drop_na(gender) %>% 
+  mutate(height_inches = height*.393701)
+my.starwars.no.jabba.ht.inches$height_inches
+```
+7.  (10 pts) Continuing with your dataset, produce a table that shows the average height in inches for each gender as well as the number of characters present in the data for each gender. The resulting data frame should have  2 rows and 3 columns.  Make sure that data frame is displayed.
+
+```{r}
+height.by.gender <- my.starwars.no.jabba.ht.inches %>% group_by(gender) %>% 
+  summarise(mean.height = mean(height_inches))
+height.by.gender
+```
+8.  (10 pts) You are thinking of doing some analysis using hair color.  Unfortunately the are a few characters who have two hair colors separated by a comma.  I think the color after the comma is the color of the hair after they have aged.  I want to get rid of the part after the comma and retain the younger hair color.  Use mutate, stringr functions, and regular expressions to alter the hair color column so that just one hair color is listed for each character.  Start with a "fresh" Star Wars dataset with all the characters included.  Remove any characters whose hair color is NA.   To show this change has been completed, print out the entire column of hair colors as a vector using $ to extract that column.
+
+
+```{r}
+my.starwars.hair <- StarWars %>% drop_na(hair_color) #%>% str_remove_all(hair_color, '\\,\\W+')
+```
+9.  (10 pts) In the metadata for the Star Wars data, the birth year is explained to be the number of years before the battle of Yavin.  For this exercise, we will assume that the battle of Yavin occurred December 7th, 1999.  Create a DateOfBirth Column in the StarWars dataset giving the date of birth for each character that has a birth_year listed(Remove any NAs). Start with a fresh Star Wars dataset.  Show the first 10 rows of the data frame that only includes birth_year and DateOfBirth as columns. You will need to use lubridate functions.
+
+```{r}
+#Yavin <- dmy("7,12,1999")
+
+StarWars.birth <- StarWars %>% drop_na(birth_year) %>% mutate(DateOfBirth = 1999 - birth_year)
+StarWars.birth$DateOfBirth
+```

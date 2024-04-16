@@ -1,0 +1,62 @@
+---
+title: "STA445_CH_5_Code"
+author: "Bianca"
+date: "2024-02-20"
+output: pdf_document
+---
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+Use the mtcars dataset that is in base R.
+Change cyl to a factor.
+
+```{r}
+my.cars <- mtcars
+my.cars$cyl <- as.factor(my.cars$cyl)
+class(my.cars$cyl)
+```
+
+Run a t-test that compares the mean fuel economy for cars with 6 cylinders to 8 cylinders.
+
+```{r}
+my.cars.1 <- my.cars %>% 
+  select(mpg, cyl) %>%
+  filter( cyl=="6" | cyl=="8")
+slice_sample(my.cars.1, n=5)
+```
+
+Do the t-test.
+
+```{r}
+t.test(data=my.cars.1, mpg ~ cyl, conf.level=0.9)
+```
+
+How does horsepower affect fuel economy?
+
+```{r}
+ggplot(data=my.cars, aes(x=hp, y=mpg)) +
+  geom_point()
+```
+```{r}
+mpg.mod <- lm(data=my.cars, mpg ~ hp)
+summary(mpg.mod)
+```
+
+```{r}
+my.cars.w.pred <- cbind(my.cars, predict(mpg.mod, interval="confidence"))
+
+my.cars.w.pred
+```
+
+Plot the points with the fitted line and confidence bands.
+
+```{r}
+ggplot(data = my.cars.w.pred, aes(x=hp, y=mpg)) +
+  geom_point(size=3) +
+  geom_line(aes(y=fit)) +
+  geom_ribbon(aes(ymin=lwr, ymax=upr), alpha=0.5, fill = "skyblue")
+```
+```
+```{}
